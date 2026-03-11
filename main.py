@@ -1,13 +1,96 @@
 import sys
 import os
+from pathlib import Path
+import inspect
+import ctypes
 
-# ----- Определяем базовую директорию (где лежит исполняемый файл) -----
+# Monkey-patch для обхода typeguard в собранном приложении
+if getattr(sys, 'frozen', False):
+    os.environ['TYPEGUARD_DISABLE'] = '1'
+    original_getsource = inspect.getsource
+    def safe_getsource(obj):
+        try:
+            return original_getsource(obj)
+        except OSError:
+            return "def fake(): pass"
+    inspect.getsource = safe_getsource
+
+# ----- Добавляем директории DLL для Windows (ВАЖНО: до импорта torchcodec) -----
+if getattr(sys, 'frozen', False) and os.name == 'nt':
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    dll_dirs = []
+    
+    # Папка с torchcodec (там лежат libtorchcodec_core*.dll)
+    torchcodec_core_dir = os.path.join(base_path, 'torchcodec')
+    if os.path.exists(torchcodec_core_dir):
+        dll_dirs.append(torchcodec_core_dir)
+        os.add_dll_directory(torchcodec_core_dir)
+    
+    # Папка с FFmpeg DLL (рядом с EXE)
+    ffmpeg_dir = os.path.join(os.path.dirname(sys.executable), 'ffmpeg')
+    if os.path.exists(ffmpeg_dir):
+        dll_dirs.append(ffmpeg_dir)
+        os.add_dll_directory(ffmpeg_dir)
+    
+    # Также добавим корневую папку (где может лежать ffmpeg.exe)
+    root_dir = os.path.dirname(sys.executable)
+    if os.path.exists(root_dir):
+        dll_dirs.append(root_dir)
+        os.add_dll_directory(root_dir)
+    
+    if dll_dirs:
+        print(f"Добавлены директории DLL: {dll_dirs}")
+    
+    # Пробуем принудительно загрузить библиотеку для диагностики
+    try:
+        ctypes.CDLL('libtorchcodec_core8.dll')
+        print("libtorchcodec_core8.dll загружена")
+    except Exception as e:
+        print("Не удалось загрузить libtorchcodec_core8.dll:", e)
+
+# -------------------- Портативная настройка (ДОЛЖНА БЫТЬ ПЕРВОЙ) --------------------
 if getattr(sys, 'frozen', False):
     BASE_DIR = os.path.dirname(sys.executable)
 else:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Папки для пользовательских файлов (только они создаются рядом с программой)
+# Единая папка для всех кэшей
+CACHE_DIR = os.path.join(BASE_DIR, "cache")
+os.makedirs(CACHE_DIR, exist_ok=True)
+
+# Подпапки для разных библиотек
+HF_CACHE = os.path.join(CACHE_DIR, "hf_cache")
+WHISPER_CACHE = os.path.join(CACHE_DIR, "whisper_cache")
+os.makedirs(HF_CACHE, exist_ok=True)
+os.makedirs(WHISPER_CACHE, exist_ok=True)
+
+# Устанавливаем переменные окружения ДО импорта любых библиотек, использующих кэш
+os.environ['HF_HOME'] = HF_CACHE
+os.environ['TRANSFORMERS_CACHE'] = HF_CACHE
+os.environ['HUGGINGFACE_HUB_CACHE'] = HF_CACHE
+os.environ['TTS_HOME'] = HF_CACHE          # <-- КЛЮЧЕВАЯ СТРОКА для TTS
+os.environ['TTS_CACHE'] = HF_CACHE         # дополнительно, для надёжности
+os.environ['COQUI_TOS_AGREED'] = '1'    # автоматическое согласие с лицензией
+
+# Папка для FFmpeg
+FFMPEG_DIR = os.path.join(BASE_DIR, "ffmpeg")
+os.makedirs(FFMPEG_DIR, exist_ok=True)
+
+# Создаём файл с инструкцией, если его нет
+readme_path = os.path.join(FFMPEG_DIR, "readme.txt")
+if not os.path.exists(readme_path):
+    with open(readme_path, 'w', encoding='utf-8') as f:
+        f.write("Поместите сюда ffmpeg (full-shared версия) со всеми библиотеками с официального сайта:\n")
+        f.write("https://www.gyan.dev/ffmpeg/builds/\n")
+        f.write("После этого перезапустите программу.\n")
+
+# Добавляем путь к локальному ffmpeg.exe, если он есть
+local_ffmpeg = os.path.join(FFMPEG_DIR, "ffmpeg.exe")
+if os.path.exists(local_ffmpeg):
+    os.environ["PATH"] = FFMPEG_DIR + os.pathsep + os.environ.get("PATH", "")
+    print(f"Локальный FFmpeg добавлен в PATH: {local_ffmpeg}")
+
+# Папки для пользовательских файлов
 INPUT_DIR = os.path.join(BASE_DIR, "input")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 REF_SAMPLES_DIR = os.path.join(INPUT_DIR, "reference_samples")
@@ -28,10 +111,32 @@ import wave
 import pygame
 import torch
 import torchaudio
+import scipy._cyutility
+import array_api_compat.numpy.fft
+import pkg_resources
+import matplotlib
+matplotlib.use('Agg')
+import transformers.models.auto
+import transformers.generation
+import transformers.tokenization_utils
+import transformers.configuration_utils
+import transformers.modeling_utils
 import whisper
 import webrtcvad
 import soundfile as sf
-import TTS.api
+import TTS.api 
+import TTS.vocoder.datasets
+import TTS.vocoder.configs
+import TTS.vocoder.models
+import TTS.vocoder.layers
+import TTS.vocoder.layers.wavegrad
+import TTS.vocoder.utils
+import TTS.vocoder.utils.distribution
+import ko_speech_tools
+import ko_speech_tools.data 
+import gruut
+import gruut.lang
+import torchcodec 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 
@@ -47,15 +152,17 @@ def check_ffmpeg():
         print("\n" + "="*60)
         print("РЕШЕНИЕ ПРОБЛЕМЫ С FFMPEG:")
         print("="*60)
-        print("1. Установите FFmpeg (full-shared версия) со всеми библиотеками глобально с официального сайта.")
-        print("2. Убедитесь, что команда 'ffmpeg' доступна в терминале.")
+        print("1. Скачайте FFmpeg (FULL SHARED версии!) с: https://www.gyan.dev/ffmpeg/builds/")
+        print("2. Извлеките ffmpeg с библиотеками и положите его в папку 'ffmpeg' рядом с программой.")
+        print("3. Перезапустите программу.")
         print("="*60 + "\n")
         raise RuntimeError("FFmpeg не найден")
 
 # -------------------- Класс распознавания речи (Whisper + VAD + норм., ленивая загрузка) --------------------
 class SpeechRecognizer:
-    def __init__(self, model_size="small"):
+    def __init__(self, model_size="small", download_root=WHISPER_CACHE):
         self.model_size = model_size
+        self.download_root = download_root
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = None
         self.vad = webrtcvad.Vad(2)
@@ -68,7 +175,7 @@ class SpeechRecognizer:
         self.model = whisper.load_model(
             self.model_size,
             device=self.device,
-            download_root=None
+            download_root=self.download_root
         )
         print("Модель загружена.")
 
@@ -153,6 +260,7 @@ class VoiceCloningSystem:
         self.default_reference = os.path.join(REF_SAMPLES_DIR, "my_voice.wav")
         print("Загрузка модели TTS...")
         try:
+            # Вместо from TTS.api import TTS используем полное имя
             self.tts = TTS.api.TTS(model_name=model_name, progress_bar=True).to(self.device)
             print("Модель успешно загружена!")
         except Exception as e:
@@ -339,7 +447,7 @@ class App:
         self.stt_model_size = tk.StringVar(value="small")
 
         # Создаём объект STT сразу (без загрузки модели)
-        self.stt_engine = SpeechRecognizer(model_size=self.stt_model_size.get())
+        self.stt_engine = SpeechRecognizer(model_size=self.stt_model_size.get(), download_root=WHISPER_CACHE)
         self.tts_engine = None
 
         # Флаги записи
@@ -687,7 +795,7 @@ class App:
 
     def on_model_size_change(self):
         new_size = self.stt_model_size.get()
-        self.stt_engine = SpeechRecognizer(model_size=new_size)
+        self.stt_engine = SpeechRecognizer(model_size=new_size, download_root=WHISPER_CACHE)
 
     def show_error_and_exit(self, message):
         messagebox.showerror("Критическая ошибка", message)
