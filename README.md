@@ -1,9 +1,9 @@
 ```markdown
-# VoiceClone — запуск из исходного кода / Running from source
+# VoiceClone-GUI — запуск из исходного кода / Running from source
 
-Это руководство предназначено для запуска программы **VoiceClone** непосредственно из исходного Python-кода на другом компьютере. Программа выполняет клонирование голоса (XTTS v2) и распознавание речи (Whisper) полностью локально.
+Это руководство предназначено для запуска программы **VoiceClone-GUI** непосредственно из исходного Python-кода на другом компьютере. Программа выполняет клонирование голоса (XTTS v2) и распознавание речи (Whisper) полностью локально.
 
-This guide explains how to run **VoiceClone** directly from the Python source code on another computer. The program performs voice cloning (XTTS v2) and speech recognition (Whisper) entirely locally.
+This guide explains how to run **VoiceClone-GUI** directly from the Python source code on another computer. The program performs voice cloning (XTTS v2) and speech recognition (Whisper) entirely locally.
 
 ---
 
@@ -40,9 +40,9 @@ It should display `Python 3.12.6`.
 
 ## 2. Получение кода / Getting the Code
 
-Скопируйте все файлы проекта (включая `main.py`) в отдельную папку, например `C:\VoiceClone_source`. Убедитесь, что у вас есть файл `main.py` (основной скрипт) и, возможно, другие вспомогательные файлы (иконка и т.д.).
+Скопируйте все файлы проекта (включая `main.py`) в отдельную папку, например `C:\VoiceClone-GUI_source`. Убедитесь, что у вас есть файл `main.py` (основной скрипт) и, возможно, другие вспомогательные файлы (иконка и т.д.).
 
-Copy all project files (including `main.py`) into a separate folder, e.g., `C:\VoiceClone_source`. Ensure you have the `main.py` file (the main script) and possibly other auxiliary files (icon, etc.).
+Copy all project files (including `main.py`) into a separate folder, e.g., `C:\VoiceClone-GUI_source`. Ensure you have the `main.py` file (the main script) and possibly other auxiliary files (icon, etc.).
 
 ---
 
