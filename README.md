@@ -1,3 +1,4 @@
+ВНИМАНИЕ / ATTENTION - Use pyinstaller with command pyinstaller main.spec to build a program. Simple!
 ```markdown
 # VoiceClone-GUI — запуск из исходного кода / Running from source
 
@@ -240,3 +241,4 @@ The software uses:
 All components are distributed under their respective licenses (MIT, Apache 2.0, GPL, etc.). This code is intended for research and personal use.
 
 ---
+
