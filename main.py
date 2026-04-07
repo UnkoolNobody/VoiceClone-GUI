@@ -1,7 +1,7 @@
 import sys
 import os
 
-# ========== Патч совместимости для Transformers (нужно современным версиям Python) ==========
+# ========= Патч совместимости для Transformers (нужно современным версиям Python) =========
 import transformers.pytorch_utils
 import torch
 
@@ -10,7 +10,7 @@ if not hasattr(transformers.pytorch_utils, 'isin_mps_friendly'):
         return torch.isin(a, b)
     transformers.pytorch_utils.isin_mps_friendly = _isin_mps_friendly
     print("✓ Патч для transformers.isin_mps_friendly применен")
-# ============================================================================================
+# ==========================================================================================
 
 # Автоматическое подтверждение лицензии Coqui TTS (иначе программа падает)
 os.environ['COQUI_TOS_AGREED'] = '1'
