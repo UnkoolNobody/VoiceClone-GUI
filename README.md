@@ -1,11 +1,11 @@
-```markdown
+```
 # VoiceClone-GUI — запуск из исходного кода / Running from source
 
 Это руководство предназначено для запуска программы **VoiceClone-GUI** непосредственно из исходного Python-кода на другом компьютере. Программа выполняет клонирование голоса (XTTS v2) и распознавание речи (Whisper) полностью локально.
 
 This guide explains how to run **VoiceClone-GUI** directly from the Python source code on another computer. The program performs voice cloning (XTTS v2) and speech recognition (Whisper) entirely locally.
 
----
+```
 
 ## Системные требования / System Requirements
 
@@ -16,7 +16,7 @@ This guide explains how to run **VoiceClone-GUI** directly from the Python sourc
 - **Диск / Storage**: ~10 ГБ свободного места для моделей и кэша / ~10 GB free space for models and cache
 - **Дополнительно / Additional**: **FFmpeg** (полная shared-сборка / full shared build) – необходима для работы аудио-обработки / required for audio processing.
 
----
+```
 
 ## 1. Установка Python / Installing Python
 
@@ -25,13 +25,15 @@ This guide explains how to run **VoiceClone-GUI** directly from the Python sourc
 Download and install Python 3.12.6 from the official website: [python.org](https://www.python.org/downloads/release/python-3126/). During installation, make sure to check **"Add Python to PATH"**.
 
 Проверьте установку, открыв терминал (cmd) и выполнив:
-```bash
+```
+bash
 python --version
 ```
 Должно отобразиться `Python 3.12.6`.
 
 Verify the installation by opening a terminal (cmd) and running:
-```bash
+```
+bash
 python --version
 ```
 It should display `Python 3.12.6`.
@@ -52,22 +54,26 @@ Copy all project files (including `main.py`) into a separate folder, e.g., `C:\V
 
 Open a terminal in the project folder and run:
 
-```bash
+```
+bash
 python -m venv venv
 ```
 
 Активируйте окружение / Activate the environment:
 
 - **Windows (cmd)**:
-  ```bash
+  ```
+  bash
   venv\Scripts\activate
   ```
 - **Windows (PowerShell)**:
-  ```bash
+  ```
+  bash
   venv\Scripts\Activate.ps1
   ```
 - **Linux/macOS**:
-  ```bash
+  ```
+  bash
   source venv/bin/activate
   ```
 
@@ -92,7 +98,7 @@ Install the required libraries (the list may be provided as a `requirements.txt`
 ```bash
 pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
 pip install whisper
-pip install TTS
+pip install coqui-tts
 pip install sounddevice soundfile pygame webrtcvad
 pip install numpy scipy matplotlib
 pip install transformers huggingface_hub tokenizers safetensors
