@@ -1,6 +1,9 @@
 import sys
 import os
 
+# Автоматическое подтверждение лицензии Coqui TTS (иначе программа падает)
+os.environ['COQUI_TOS_AGREED'] = '1'
+
 # ----- Определяем базовую директорию (где лежит исполняемый файл) -----
 if getattr(sys, 'frozen', False):
     BASE_DIR = os.path.dirname(sys.executable)
