@@ -10,7 +10,7 @@ This guide explains how to run **VoiceClone-GUI** directly from the Python sourc
 ## Системные требования / System Requirements
 
 - **ОС / OS**: Windows 10/11 (64-bit) — рекомендуется; возможна работа на Linux/macOS с незначительными изменениями.
-- **Python**: версия 3.12.6 (или совместимая 3.10–3.12)
+- **Python**: версия 3.12.6 (работоспособность на python 3.14.3 проверена / also tested on python 3.14.3 - working)
 - **Процессор / CPU**: Intel Core i5 или аналогичный (многоядерный рекомендуется) / Intel Core i5 or equivalent (multi-core recommended)
 - **Оперативная память / RAM**: минимум 8 ГБ (рекомендуется 16 ГБ) / minimum 8 GB (16 GB recommended)
 - **Диск / Storage**: ~10 ГБ свободного места для моделей и кэша / ~10 GB free space for models and cache
@@ -103,6 +103,7 @@ pip install torchcodec   # для аудио-обработки (требует 
 pip install pysbd        # для сегментации текста
 pip install librosa      # для аудио-анализа
 pip install scikit-learn # может потребоваться для некоторых функций TTS
+pip install pygame-ce
 ```
 
 Обратите внимание: `torchcodec` требует наличия FFmpeg (shared) в системе (см. следующий раздел).
